@@ -1,16 +1,26 @@
 const corsProxy = require('../lib/cors-anywhere');
 
-// Initialize the proxy
 const proxy = corsProxy.createServer({
-    originWhitelist: [], // Allow all origins
-    requireHeader: [],    // Remove the X-Requested-With requirement
-    removeHeaders: ['cookie', 'cookie2'] // Optional: helps with security
+    originWhitelist: [], 
+    requireHeader: [],    
+    removeHeaders: ['cookie', 'cookie2']
 });
 
 export default function handler(req, res) {
-    // Vercel gives us the full path in req.url
-    // We strip the leading slash so cors-anywhere sees "https://example.com"
-    req.url = req.url.replace(/^\//, '');
+    // 1. Get the URL and remove the leading slash safely
+    // This regex ensures we ONLY remove the first slash if it's the very first character
+    let targetUrl = req.url.startsWith('/') ? req.url.substring(1) : req.url;
+
+    // 2. Fix the "Double Slash" issue
+    // Sometimes browsers/Vercel collapse // into / (e.g., https:/google.com)
+    if (targetUrl.startsWith('http:/') && !targetUrl.startsWith('http://')) {
+        targetUrl = targetUrl.replace('http:/', 'http://');
+    } else if (targetUrl.startsWith('https:/') && !targetUrl.startsWith('https://')) {
+        targetUrl = targetUrl.replace('https:/', 'https://');
+    }
+
+    // 3. Re-assign the cleaned URL back to the request object
+    req.url = targetUrl;
     
     proxy.emit('request', req, res);
 }
