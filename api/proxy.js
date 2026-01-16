@@ -4,7 +4,7 @@ const proxy = corsProxy.createServer({
     originWhitelist: [], 
     requireHeader: [],    
     removeHeaders: ['cookie', 'cookie2']
-});
+}); 
 
 export default function handler(req, res) {
     // 1. Get the URL and remove the leading slash safely
